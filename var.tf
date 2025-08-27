@@ -36,3 +36,8 @@ variable "proxmox_node" {
   default     = "pve"
 
 }
+
+variable "pm_api_url" {
+  description = "URL da API do Proxmox (ex: https://192.168.1.100:8006/api2/json)."
+  type        = string
+}

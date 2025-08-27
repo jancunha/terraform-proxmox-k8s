@@ -58,7 +58,7 @@ Este comando cria uma nova VM com as configurações básicas. O ID `202` é um 
 
 ```bash
 qm create 202 \
-  --name ubuntu-2204-cloud-init-zfs \
+  --name ubuntu-2204-cloud-init-tf \
   --numa 0 \
   --ostype l26 \
   --cpu cputype=host \
@@ -108,64 +108,73 @@ Tudo pronto! Agora, transforme a VM em um template. A partir dele, o Terraform p
 qm template 202
 ```
 
-Agora você tem um template chamado `ubuntu-2204-cloud-init-zfs` pronto para ser usado pelo Terraform!
+Agora você tem um template chamado `ubuntu-2204-cloud-init-tf` pronto para ser usado pelo Terraform!
 
+## Configuração e Execução
 
-### Configuração
+Siga estes passos para configurar e executar o projeto.
 
-1.  **Clonando o repositório:**
-    ```bash
-    git clone <URL_DO_SEU_REPOSITORIO>
-    cd proxmox-k8s/terraform
-    ```
+### 1. Clone o Repositório
 
-2.  **Variáveis de Ambiente (Opcional, mas recomendado):**
-    Para não expor suas credenciais, você pode configurar as variáveis de ambiente para o provedor Proxmox. O código já está configurado para usá-las.
-    ```bash
-    export PM_API_TOKEN_ID="seu-usuario@pve!seu-token-id"
-    export PM_API_TOKEN_SECRET="seu-token-secret"
-    ```
-    *Observação: O `provider.tf` está usando a URL da API diretamente. Para mais segurança, você pode remover a configuração do provedor de lá e usar a variável de ambiente `PM_API_URL`.*
+Primeiro, clone o projeto para a sua máquina local.
 
-3.  **Criando o arquivo de variáveis:**
-    O Terraform precisa de algumas informações que são específicas do seu ambiente. Crie um arquivo chamado `terraform.tfvars` e preencha-o com os seguintes dados:
+```bash
+git clone <URL_DO_SEU_REPOSITORIO>
+cd proxmox-k8s/terraform
+```
+*Observação: Não se esqueça de substituir `<URL_DO_SEU_REPOSITORIO>` pela URL real do seu projeto no GitHub.*
 
-    ```hcl
-    # terraform.tfvars
+### 2. Crie o Arquivo de Variáveis
 
-    # Senha para o usuário criado pelo cloud-init (ex: "minhasenhaforte")
-    ci_password = "SUA_SENHA_AQUI"
+O Terraform precisa de algumas informações sobre o seu ambiente. Crie um arquivo chamado `terraform.tfvars` e adicione as seguintes informações. Este arquivo guardará as configurações principais.
 
-    # Sua chave SSH pública (o conteúdo do seu arquivo ~/.ssh/id_rsa.pub)
-    ssh_public_key = "ssh-rsa AAAA..."
+```hcl
+# terraform.tfvars
 
-    # Caminho para a sua chave SSH privada (para que o Terraform possa se conectar à VM)
-    ssh_private_key_path = "/home/seu_usuario/.ssh/id_rsa"
-    ```
+# URL da API do seu Proxmox
+pm_api_url = "https://192.168.1.250:8006/api2/json"
 
-### Executando o Terraform
+# Senha para o usuário "sysadmin" criado pelo cloud-init
+ci_password = "SUA_SENHA_AQUI"
 
-1.  **Inicialize o Terraform:**
-    Este comando baixa o provedor Proxmox.
-    ```bash
-    terraform init
-    ```
+# Sua chave SSH pública para acessar as VMs
+ssh_public_key = "ssh-rsa AAAA..."
 
-2.  **Planeje a execução:**
-    O Terraform mostrará o que ele vai criar. É sempre bom verificar antes de aplicar.
-    ```bash
-    terraform plan
-    ```
+# Caminho para a sua chave SSH privada correspondente
+ssh_private_key_path = "/home/seu_usuario/.ssh/id_rsa"
+```
 
-3.  **Aplique a configuração:**
-    Este comando vai, de fato, criar as VMs.
-    ```bash
-    terraform apply
-    ```
+### 3. Configure as Credenciais do Proxmox (Recomendado)
 
-    Digite `yes` quando for solicitado.
+Por segurança, é melhor não colocar suas credenciais do Proxmox diretamente no código. A forma mais segura é usar **variáveis de ambiente**. O Terraform as detectará automaticamente.
 
-Ao final, o Terraform mostrará os endereços IP das suas novas VMs. Agora você pode acessá-las via SSH e começar a instalar o seu cluster Kubernetes!
+Abra o seu terminal e execute os seguintes comandos, substituindo pelos seus dados:
+
+```bash
+export PM_API_TOKEN_ID="seu-usuario@pve!seu-token-id"
+export PM_API_TOKEN_SECRET="seu-token-secret"
+```
+
+*Dica: Para saber como gerar um token de API no Proxmox, você pode seguir a [documentação oficial do provedor](https://registry.terraform.io/providers/Telmate/proxmox/latest/docs#creating-the-proxmox-user-and-role-for-terraform).*
+
+### 4. Execute o Terraform
+
+Com tudo configurado, você já pode criar a infraestrutura.
+
+```bash
+# Baixa os plugins necessários
+terraform init
+
+# (Opcional) Revisa o que será criado
+terraform plan
+
+# Cria as VMs
+terraform apply
+```
+
+Digite `yes` quando o Terraform pedir a confirmação.
+
+Ao final, os endereços IP das suas novas VMs aparecerão na tela. Agora é só acessá-las via SSH e começar a montar seu cluster Kubernetes!
 
 ## Para destruir o ambiente
 
@@ -174,3 +183,17 @@ Se quiser remover todas as VMs criadas pelo Terraform, basta executar:
 ```bash
 terraform destroy
 ```
+
+## Como Contribuir
+
+Contribuições são bem-vindas! Se você quiser melhorar este projeto, siga estes passos:
+
+1.  **Faça um Fork:** Crie um fork deste repositório para a sua conta do GitHub.
+2.  **Crie uma Branch:** Crie uma branch para a sua nova feature ou correção (`git checkout -b minha-feature`).
+3.  **Faça o Commit:** Faça o commit das suas alterações (`git commit -m 'Adiciona minha feature'`).
+4.  **Faça o Push:** Envie as suas alterações para a sua branch (`git push origin minha-feature`).
+5.  **Abra um Pull Request:** Abra um Pull Request para que as suas alterações possam ser revisadas e integradas ao projeto principal.
+
+## Licença
+
+Este projeto está licenciado sob a Licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
